@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { getAllProduct } from "../api/api";
 import Card from "../Components/Card";
 import Catagories from "../Components/Categories";
 import Footer from "../Components/Footer";
@@ -13,74 +12,83 @@ import {
     BreadcrumbItem,
     BreadcrumbLink,
     BreadcrumbSeparator,
-    useToast
+    useToast,
+    HStack,
+    Image,
+    Text,
+    Select,
+    Spinner,
+    Box
 } from '@chakra-ui/react';
 import { ChevronRightIcon } from "@chakra-ui/icons";
+import { useDispatch, useSelector } from "react-redux";
+import { getProductAPI } from "../store/products/product.action";
 
 export default function HairCare() {
-    const [data, setData] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
-
+    const { data, loading, error } = useSelector(store => store.productData);
+    const dispatch = useDispatch();
+    const [sort, setSort] = useState('asc');
     useEffect(() => {
-        setIsLoading(true);
-        getAllProduct().then(res => {
-            const Filter = res.data.filter((el) => el.category === 'hair');
-            setData([...Filter]);
-            setIsLoading(false);
-        }).catch((err) => {
-            console.log(err)
-            setIsLoading(false);
-        })
-    }, []);
+        dispatch(getProductAPI(sort, 'hair'));
+        console.log(data, loading)
+    }, [dispatch, sort]);
     const handleSort = (event) => {
-        const { value } = event.target;
-        if (value === 'lth') {
-            data.sort((a, b) => a.disPrice - b.disPrice);
-            setData([...data]);
-
-        } else if (value === 'htl') {
-            data.sort((a, b) => b.disPrice - a.disPrice);
-            setData([...data]);
-        }
-
+        if (event.target.value == '') return;
+        setSort(event.target.value);
     };
     return (
         <div>
             <Header />
             <Navbar />
-            <Breadcrumb spacing='8px' className={styles.breadcrumb} separator={<ChevronRightIcon color='gray.500' />}>
-                <BreadcrumbItem>
-                    <BreadcrumbLink href='/'>Home</BreadcrumbLink>
-                </BreadcrumbItem>
+            <Box w={'100%'}>
+                <Text color={'white'}>a</Text>
+                <Divider orientation='horizontal' borderBottom={'1.9px solid #e5f0da'} />
+                <Breadcrumb spacing='8px' className={styles.breadcrumb} separator={<ChevronRightIcon color='gray.500' />}>
+                    <BreadcrumbItem>
+                        <BreadcrumbLink href='/'>Home</BreadcrumbLink>
+                    </BreadcrumbItem>
 
-                <BreadcrumbItem>
-                    <BreadcrumbLink href='/haircare'>Haircare</BreadcrumbLink>
-                </BreadcrumbItem>
-            </Breadcrumb>
-            <div id="Productdetails">
-                <h1><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTcPjkFaNSTkWAQPmERF6KZx_Ek4h9--FoHCA&usqp=CAU" alt="" /> Refine by</h1>
-                <h1>
+                    <BreadcrumbItem>
+                        <BreadcrumbLink href='/haircare'>Haircare</BreadcrumbLink>
+                    </BreadcrumbItem>
+                </Breadcrumb>
+            </Box>
+            <HStack p={'1rem'} justify={'space-between'} >
+                <HStack display={['none', 'flex', 'flex']}>
+                    <Image w={'25px'} h={'25px'} src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTcPjkFaNSTkWAQPmERF6KZx_Ek4h9--FoHCA&usqp=CAU" alt="" />
+                    <Text fontWeight={'bold'} fontSize={'1.2rem'}>Refine by</Text>
+                </HStack>
+                <Text fontWeight={'bold'} fontSize={['0.9rem', '1rem', '1.2rem']}>
                     {`${data.length} products`}
-                </h1>
-                <div id="sort">
-                    Sortby:  <select id="" onChange={handleSort}>
-                        <option value=""> Featured</option>
-                        <option value="lth">Price, Low to High</option>
-                        <option value="htl">Price, High to Low</option>
-                    </select>
-                </div>
+                </Text>
+                <HStack id="sort">
+                    <Select  onChange={handleSort}>
+                        <option value=""> Sort by price</option>
+                        <option value="asc">Low to High</option>
+                        <option value="desc">High to Low</option>
+                    </Select>
+                </HStack>
 
-            </div>
+            </HStack>
             <div className={styles.container}>
                 <div id="category">
                     <Catagories />
                 </div>
-                <div className={styles.products} style={{ width: "225rem" }}>
-                    {/* <Products data={data} /> */}
-                    {isLoading ? <h1 className={styles.loading}>Loading...</h1> : <Products data={data} />}
-                </div>
+                <Box className={styles.products} style={{ width: "225rem" }} >
+
+                    {loading ? <Spinner
+                        m={'auto'}
+                        display={'block'}
+                        thickness='5px'
+                        speed='0.65s'
+                        emptyColor='gray.200'
+                        color='green.400'
+                        size='xl'
+                    /> : <Products data={data} />}
+                </Box>
             </div>
             <Footer />
         </div>
     )
 }
+
